@@ -16,29 +16,33 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 public class APIExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler
-    public ResponseEntity<APIErrorResponse> general(GeneralException e) {
+    public ResponseEntity<Object> general(GeneralException e, WebRequest request) {
         ErrorCode errorCode = e.getErrorCode();
         HttpStatus status = errorCode.isClientSideError() ?
                 HttpStatus.BAD_REQUEST :
                 HttpStatus.INTERNAL_SERVER_ERROR;
 
-        return ResponseEntity
-                .status(status)
-                .body(APIErrorResponse.of(
-                        false, errorCode, errorCode.getMessage(e)
-                ));
+        return super.handleExceptionInternal(
+                e
+                , APIErrorResponse.of(false, errorCode.getCode(), errorCode.getMessage(e))
+                , HttpHeaders.EMPTY
+                , status
+                , request
+        );
     }
 
     @ExceptionHandler
-    public ResponseEntity<APIErrorResponse> exception(Exception e) {
+    public ResponseEntity<Object> exception(Exception e, WebRequest request) {
         ErrorCode errorCode = ErrorCode.INTERNAL_ERROR;
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 
-        return ResponseEntity
-                .status(status)
-                .body(APIErrorResponse.of(
-                        false, errorCode, errorCode.getMessage(e)
-                ));
+        return super.handleExceptionInternal(
+                e
+                , APIErrorResponse.of(false, errorCode.getCode(), errorCode.getMessage(e))
+                , HttpHeaders.EMPTY
+                , status
+                , request
+        );
     }
 
     @Override
@@ -47,6 +51,12 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
                 ErrorCode.SPRING_BAD_REQUEST :
                 ErrorCode.SPRING_INTERNAL_ERROR;
 
-        return super.handleExceptionInternal(ex, body, headers, status, request);
+        return super.handleExceptionInternal(
+                ex
+                , APIErrorResponse.of(false, errorCode.getCode(), errorCode.getMessage(ex))
+                , headers
+                , status
+                , request
+        );
     }
 }
